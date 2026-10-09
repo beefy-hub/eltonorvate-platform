@@ -1,0 +1,17 @@
+name = "eltonorvate-platform"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+
+# Substitua pelo ID real da conta Cloudflare usada no deploy
+account_id = "636bfe9f1652d341bab70a1f95936279"
+
+kv_namespaces = [
+  { binding = "PLATFORM_KV", id = "0be31f97b828444ca950bc6f4fff6e93" }
+]
+
+[vars]
+BASE_URL = "https://eltonorvate-platform.workers.dev"
+
+# Configure via secrets (nunca commitar):
+#   npx wrangler secret put IG_APP_ID
+#   npx wrangler secret put IG_APP_SECRET

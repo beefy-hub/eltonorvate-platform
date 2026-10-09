@@ -10,7 +10,7 @@ kv_namespaces = [
 ]
 
 [vars]
-BASE_URL = "https://eltonorvate-platform.workers.dev"
+BASE_URL = "https://eltonorvate-platform.beefyhub.workers.dev"
 
 # Configure via secrets (nunca commitar):
 #   npx wrangler secret put IG_APP_ID

@@ -1,6 +1,8 @@
-# Elton Orvate Platform
+# Beefy HUB IG — plataforma própria de gestão do Instagram **@eltonorvate**
 
-Plataforma própria de gestão do Instagram **@eltonorvate** — substitui o Metricool no pipeline editorial (pauta → aprovação → publicação → insights → comentários → DM).
+**Produção:** https://beefyhub-ig.beefyhub.workers.dev
+
+Substitui o Metricool no pipeline editorial (pauta → aprovação → publicação → insights → comentários → DM).
 
 ## Stack
 - **Cloudflare Workers** (ES module, sem build)

@@ -12,5 +12,9 @@ const m=await fetch(G+"/me?fields=id,username,name,followers_count,follows_count
 await V.put("user",JSON.stringify(m));
 return new Response("CONECTADO: "+JSON.stringify(m))}
 if(u.pathname=="/api/me"){const t=await V.get("tok");if(!t)return Response.json({error:"no token"},{status:401});return Response.json(await fetch(G+"/me?fields=id,username,followers_count,media_count&access_token="+encodeURIComponent(t)).then(x=>x.json()))}
+if(u.pathname=="/webhook"){
+if(r.method==="GET"){const m=u.searchParams.get("hub.mode"),t=u.searchParams.get("hub.verify_token"),c=u.searchParams.get("hub.challenge");if(m==="subscribe"&&t===e.WEBHOOK_VERIFY_TOKEN)return new Response(c);return new Response("forbidden",{status:403})}
+if(r.method==="POST"){const ev=await r.json().catch(()=>null);if(ev)await V.put("webhook:"+Date.now(),JSON.stringify(ev),{expirationTtl:86400});return Response.json({ok:1})}
+return new Response("method not allowed",{status:405})}
 const sv=await V.get("user");
-return new Response("Elton Orvate Platform OK. conta: "+(sv||"nenhuma")+" | /auth /callback /api/me /health")}}
+return new Response("Elton Orvate Platform OK. conta: "+(sv||"nenhuma")+" | /auth /callback /api/me /health /webhook")}}

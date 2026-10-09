@@ -1,4 +1,4 @@
-name = "eltonorvate-platform"
+name = "beefyhub-ig"
 main = "src/worker.js"
 compatibility_date = "2026-10-01"
 
@@ -10,7 +10,7 @@ kv_namespaces = [
 ]
 
 [vars]
-BASE_URL = "https://eltonorvate-platform.beefyhub.workers.dev"
+BASE_URL = "https://beefyhub-ig.beefyhub.workers.dev"
 
 # Configure via secrets (nunca commitar):
 #   npx wrangler secret put IG_APP_ID

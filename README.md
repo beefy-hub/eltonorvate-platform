@@ -12,13 +12,13 @@ Substitui o Metricool no pipeline editorial (pauta → aprovação → publicaç
 ## Status: Fase 1 — testes de conectividade
 | Teste | Endpoint | Status |
 |---|---|---|
-| Troca de code por token | `/callback` | ⬜ |
-| Long-lived token (60 dias) | `/callback` | ⬜ |
-| Perfil (`instagram_business_basic`) | `/api/me` | ⬜ |
-| Mídias da conta | `/api/media` | ⬜ |
-| Insights da conta | `/api/insights` | ⬜ |
-| Cota de publicação | `/api/publishing-limit` | ⬜ |
-| Comentários | `/api/comments?media_id=` | ⬜ |
+| Troca de code por token | `/callback` | ✅ |
+| Long-lived token (60 dias) | `/callback` | ✅ |
+| Perfil (`instagram_business_basic`) | `/api/me` | ✅ |
+| Mídias da conta | `/api/media` | ✅ |
+| Insights da conta | `/api/insights` | ✅ |
+| Cota de publicação | `/api/publishing-limit` | ✅ |
+| Comentários | `/api/comments?media_id=` | ✅ |
 | Publicação de carrossel | (fase 2) | ⬜ |
 
 ## Scopes utilizados

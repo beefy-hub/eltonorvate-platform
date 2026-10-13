@@ -73,6 +73,18 @@ async function publishCarousel(V, urls, caption) {
   return { ok: 1, result: pub };
 }
 
+async function waSend(text) {
+  if (typeof DIGISAC_TOKEN === "undefined" || !DIGISAC_TOKEN) return { ok: 0, error: "digisac nao configurado" };
+  const r = await fetch("https://beecont.digisac.app/api/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + DIGISAC_TOKEN },
+    body: JSON.stringify({ text: text, type: "chat", serviceId: DIGISAC_SERVICE_ID, number: DIGISAC_NUMBER, dontOpenTicket: true, origin: "bot" })
+  });
+  let jr = null;
+  try { jr = await r.json(); } catch (e) {}
+  return { ok: r.ok ? 1 : 0, status: r.status, result: jr };
+}
+
 async function runDue(V, dryRun) {
   const l = await V.list({ prefix: "s:" });
   const now = Date.now();
@@ -193,6 +205,28 @@ async function handleRequest(request) {
         }));
         items.sort((a, b) => (b.ts || 0) - (a.ts || 0));
         return Response.json({ data: items });
+      }
+
+      if (url.pathname === "/panel/api/wa-test" && request.method === "POST") {
+        const r = await waSend("Beefy HUB IG: integracao WhatsApp ativa. Aprovacoes de pauta chegarao por aqui - responda APROVAR ou REJEITAR com o codigo.");
+        return Response.json(r);
+      }
+
+      if (url.pathname === "/panel/api/wa-approve" && request.method === "POST") {
+        const b = await request.json().catch(() => ({}));
+        if (!b.id || b.id.indexOf("q:") !== 0) return Response.json({ error: "id invalido" }, { status: 400 });
+        const v = await V.get(b.id);
+        if (!v) return Response.json({ error: "item nao encontrado" }, { status: 404 });
+        let it;
+        try { it = JSON.parse(v); } catch (e) { it = {}; }
+        const code = b.id.slice(2);
+        const resumo = (it.titulo || it.caption || it.tipo || "post").toString().slice(0, 80);
+        const n = (it.urls || []).length;
+        const msg = "APROVACAO DE POST - @eltonorvate\n\nPauta: " + resumo + "\nCodigo: " + code + "\nImagens: " + n +
+          (it.descricao ? "\n\n" + String(it.descricao).slice(0, 200) : "") +
+          "\n\nResponda:\nAPROVAR " + code + " - publica agora\nREJEITAR " + code + " - descarta";
+        const r = await waSend(msg);
+        return Response.json(r);
       }
 
       if (url.pathname === "/panel/api/queue/action" && request.method === "POST") {
@@ -348,6 +382,57 @@ async function handleRequest(request) {
         return Response.json({ ok: 1 });
       }
       return new Response("method not allowed", { status: 405 });
+    }
+
+    if (url.pathname === "/digisac" && request.method === "POST") {
+      const ev = await request.json().catch(() => null);
+      await V.put("wa:" + Date.now(), JSON.stringify(ev), { expirationTtl: 86400 });
+      const msg = (ev && (ev.data || ev.message)) || ev || {};
+      const num = String(msg.number || msg.from || "").replace(/\D/g, "");
+      const admin = String(typeof DIGISAC_NUMBER !== "undefined" ? DIGISAC_NUMBER : "").replace(/\D/g, "");
+      if (!admin || !num.endsWith(admin)) return Response.json({ ok: 0, error: "numero nao autorizado" }, { status: 403 });
+      const text = String(msg.text || msg.body || "").trim();
+      const m = text.match(/^(APROVAR|REJEITAR)\s*(\S+)?/i);
+      if (!m) return Response.json({ ok: 0, error: "comando nao reconhecido" }, { status: 400 });
+      const action = m[1].toLowerCase() === "aprovar" ? "approve" : "reject";
+      let id = m[2] ? (m[2].indexOf("q:") === 0 ? m[2] : "q:" + m[2]) : null;
+      if (!id) {
+        const l = await V.list({ prefix: "q:" });
+        const items = await Promise.all(l.keys.map(async (k) => {
+          const v = await V.get(k.name);
+          let it2;
+          try { it2 = JSON.parse(v); } catch (e) { it2 = null; }
+          return it2 ? { id: k.name, ...it2 } : null;
+        }));
+        const pend = items.filter(x => x && (x.status === "pendente" || !x.status)).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        if (!pend.length) { await waSend("Nenhuma pauta pendente de aprovacao."); return Response.json({ ok: 0, error: "nenhum pendente" }); }
+        id = pend[0].id;
+      }
+      const v = await V.get(id);
+      if (!v) { await waSend("Item " + id + " nao encontrado. Verifique o codigo."); return Response.json({ ok: 0, error: "nao encontrado" }, { status: 404 }); }
+      let item;
+      try { item = JSON.parse(v); } catch (e) { item = {}; }
+      if (action === "reject") {
+        item.status = "rejeitado";
+        item.decided_at = Date.now();
+        await V.put(id, JSON.stringify(item));
+        await waSend("Rejeitado (" + id + "). A pauta foi descartada.");
+        return Response.json({ ok: 1, id, status: "rejeitado" });
+      }
+      item.status = "aprovado";
+      item.decided_at = Date.now();
+      if (item.urls && item.urls.length && item.caption) {
+        const r = await publishCarousel(V, item.urls, item.caption);
+        item.status = r.ok ? "publicado" : "erro";
+        item.result = r;
+        item.finished_at = Date.now();
+        await V.put(id, JSON.stringify(item));
+        await waSend(r.ok ? ("Publicado no Instagram: " + id) : ("Falha ao publicar " + id + ": " + JSON.stringify(r.error || r).slice(0, 150)));
+        return Response.json({ ok: 1, id, status: item.status });
+      }
+      await V.put(id, JSON.stringify(item));
+      await waSend("Aprovado (" + id + "). Sem artes anexadas - aguardando publicacao pelo painel.");
+      return Response.json({ ok: 1, id, status: "aprovado" });
     }
 
     const sv = await V.get("user");

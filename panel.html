@@ -104,6 +104,7 @@ textarea{min-height:110px}
     <div class="row" style="margin-top:16px">
       <button class="btn" id="btnAg">Agendar</button>
       <button class="btn ghost" id="btnDry">Verificar vencidos (simulação)</button>
+      <button class="btn ghost" id="btnWaTest">Testar WhatsApp</button>
     </div>
     <div class="small mut" id="agOut" style="margin-top:12px"></div>
   </div>
@@ -194,12 +195,17 @@ async function loadQueue(){
       <div><span class="pill ${q.status==='aprovado'?'ok':q.status==='rejeitado'?'no':''}">${q.status||'pendente'}</span>
       <b style="margin-left:10px">${q.titulo||q.tipo||q.id}</b></div>
       <div class="row">
+        <button class="btn ghost" onclick="qWa('${q.id}')">WhatsApp</button>
         <button class="btn" onclick="qAct('${q.id}','approve')">Aprovar</button>
         <button class="btn ghost" onclick="qAct('${q.id}','reject')">Rejeitar</button>
       </div>
     </div>
     ${q.descricao?`<p class="small mut" style="margin-top:10px">${q.descricao}</p>`:''}
   </div>`).join('');
+}
+async function qWa(id){
+  const r=await api('wa-approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+  r.error?toast('Erro: '+JSON.stringify(r)):toast('Pedido de aprovacao enviado no WhatsApp.');
 }
 async function qAct(id,action){
   const r=await api('queue/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action})});
@@ -248,6 +254,11 @@ $('#btnAg').onclick=async()=>{
   if(r.error){$('#agOut').textContent='Erro: '+JSON.stringify(r);return}
   $('#agOut').textContent='Agendado para '+new Date(runAt).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+'.';
   toast('Agendamento criado!');loadSched();
+};
+$('#btnWaTest').onclick=async()=>{
+  const r=await api('wa-test',{method:'POST'});
+  $('#agOut').textContent='WhatsApp: '+JSON.stringify(r);
+  r.ok?toast('Mensagem de teste enviada no WhatsApp.'):toast('Falha no envio - veja detalhes.');
 };
 $('#btnDry').onclick=async()=>{
   const r=await api('schedule/run-now',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dry_run:true})});

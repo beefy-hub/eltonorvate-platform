@@ -15,3 +15,9 @@ BASE_URL = "https://beefyhub-ig.beefyhub.workers.dev"
 # Configure via secrets (nunca commitar):
 #   npx wrangler secret put IG_APP_ID
 #   npx wrangler secret put IG_APP_SECRET
+#   npx wrangler secret put WEBHOOK_VERIFY_TOKEN
+#   npx wrangler secret put PANEL_USER
+#   npx wrangler secret put PANEL_PASSWORD
+#   npx wrangler secret put DIGISAC_TOKEN      # Bearer da API Digisac (beecont.digisac.app)
+#   npx wrangler secret put DIGISAC_SERVICE_ID # UUID do servico WhatsApp
+#   npx wrangler secret put DIGISAC_NUMBER     # numero admin (aprovacoes por WhatsApp), ex: 5511XXXXXXXXX

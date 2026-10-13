@@ -58,6 +58,7 @@ textarea{min-height:110px}
     <button data-s="comentarios">Comentários</button>
     <button data-s="fila">Fila de Aprovação</button>
     <button data-s="agendar">Agendar</button>
+    <button data-s="arte">Arte e Textos</button>
     <button data-s="publicar">Publicar</button>
   </nav>
 </header>
@@ -107,6 +108,55 @@ textarea{min-height:110px}
       <button class="btn ghost" id="btnWaTest">Testar WhatsApp</button>
     </div>
     <div class="small mut" id="agOut" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<section class="sec" id="s-arte">
+  <h2>Biblioteca de arquivos</h2>
+  <div class="card" style="max-width:640px">
+    <div class="row">
+      <input type="file" id="fileIn" accept="image/png,image/jpeg,image/webp" style="flex:1">
+      <button class="btn" id="btnUp">Enviar</button>
+    </div>
+    <div class="small mut" id="upOut" style="margin-top:10px"></div>
+  </div>
+  <div id="lstFiles" class="grid" style="margin-top:14px"></div>
+
+  <h2>Gerador de arte (1080x1350)</h2>
+  <div class="card" style="max-width:640px">
+    <label>Titulo do slide</label>
+    <input id="artTitulo" placeholder="Ex.: A abstencao vai decidir o 2o turno">
+    <label>Destaques (um por linha, ate 5)</label>
+    <textarea id="artLinhas" placeholder="31,3 milhoes de votos em branco, nulos e ausentes&#10;Mais que a diferenca entre os dois candidatos"></textarea>
+    <label>Rodape (pergunta / CTA)</label>
+    <input id="artRodape" placeholder="Voce votou ou anulou? Comenta aqui.">
+    <label>Foto (nome do arquivo na biblioteca OU url https) - opcional</label>
+    <input id="artFoto" placeholder="ex.: foto-candidato.jpg ou https://…">
+    <div class="row" style="margin-top:16px">
+      <input id="artNumero" placeholder="3/10" style="max-width:90px">
+      <button class="btn" id="btnArt">Gerar arte</button>
+    </div>
+    <div class="small mut" id="artOut" style="margin-top:12px"></div>
+    <div id="artPreview" style="margin-top:12px"></div>
+  </div>
+
+  <h2>Gerador de legenda</h2>
+  <div class="card" style="max-width:640px">
+    <label>Tema / pauta</label>
+    <input id="capTema" placeholder="Ex.: abstencao recorde no 1o turno">
+    <label>Dados / argumentos (um por linha)</label>
+    <textarea id="capBullets" placeholder="31,3 mi de votos nulos/brancos/ausentes&#10;Quem nao foi urna decide o segundo turno"></textarea>
+    <label>Tom</label>
+    <select id="capTom">
+      <option value="critico">Critico (menos Estado, mais empreendedorismo)</option>
+      <option value="dados">Dados / tecnico</option>
+      <option value="motivacional">Motivacional / gestao</option>
+    </select>
+    <label>Pergunta de engajamento</label>
+    <input id="capPergunta" placeholder="Voce votou ou anulou?">
+    <div style="margin-top:16px"><button class="btn" id="btnCap">Gerar legenda</button></div>
+    <textarea id="capOut" style="margin-top:12px;min-height:220px" placeholder="A legenda gerada aparece aqui…"></textarea>
+    <div style="margin-top:10px"><button class="btn ghost" id="btnCapUse">Usar no agendamento</button></div>
   </div>
 </section>
 
@@ -265,6 +315,67 @@ $('#btnDry').onclick=async()=>{
   $('#agOut').textContent='Simulação: '+(r.ran&&r.ran.length?JSON.stringify(r.ran):'nenhum post vencido no momento.');
 };
 
+// ----- Arte e Textos -----
+let dlFiles=document.createElement('datalist');dlFiles.id='dlFiles';document.body.appendChild(dlFiles);
+$('#artFoto').setAttribute('list','dlFiles');
+async function loadFiles(){
+  const d=await api('files');const idx=d.data||{};
+  const names=Object.keys(idx).sort((a,b)=>(idx[b].ts||0)-(idx[a].ts||0));
+  dlFiles.innerHTML=names.map(n=>'<option value="'+n+'">').join('');
+  if(!names.length){$('#lstFiles').innerHTML='<div class="card mut">Nenhum arquivo. Envie imagens para usar nas artes e nos posts.</div>';return}
+  $('#lstFiles').innerHTML=names.map(n=>{const m=idx[n];return `<div class="card">
+    <img src="/file/${n}" style="width:100%;border-radius:8px;display:block" loading="lazy">
+    <div class="small mut" style="margin-top:8px;word-break:break-all">${n}</div>
+    <div class="small mut">${((m.size||0)/1024).toFixed(0)} KB</div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn ghost" onclick="navigator.clipboard.writeText(location.origin+'/file/${n}');toast('URL copiada.')">Copiar URL</button>
+      <button class="btn danger" onclick="delFile('${n}')">Excluir</button>
+    </div>
+  </div>`}).join('');
+}
+async function delFile(name){
+  if(!confirm('Excluir '+name+'?'))return;
+  const r=await api('files/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  r.error?toast('Erro: '+r.error):(toast('Arquivo excluido.'),loadFiles());
+}
+$('#btnUp').onclick=async()=>{
+  const f=$('#fileIn').files[0];if(!f){toast('Escolha um arquivo.');return}
+  if(f.size>12*1024*1024){toast('Maximo 12MB.');return}
+  $('#btnUp').disabled=true;$('#upOut').textContent='Enviando…';
+  const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(f)});
+  const name=f.name.toLowerCase().replace(/[^a-z0-9._-]+/g,'-');
+  const r=await api('files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,ct:f.type,data:b64})});
+  $('#btnUp').disabled=false;
+  if(r.error){$('#upOut').textContent='Erro: '+JSON.stringify(r);toast('Falha no envio.');return}
+  $('#upOut').textContent='Enviado: '+r.url;$('#fileIn').value='';toast('Arquivo enviado!');loadFiles();
+};
+$('#btnArt').onclick=async()=>{
+  const body={titulo:$('#artTitulo').value,linhas:$('#artLinhas').value.split('\n'),rodape:$('#artRodape').value,foto:$('#artFoto').value,numero:$('#artNumero').value};
+  $('#btnArt').disabled=true;$('#artOut').textContent='Gerando arte (primeira vez pode levar alguns segundos)…';
+  const r=await api('art',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  $('#btnArt').disabled=false;
+  if(r.error){$('#artOut').textContent='Erro: '+JSON.stringify(r);toast('Falha ao gerar arte.');return}
+  $('#artOut').innerHTML='Arte pronta: <b>'+r.url+'</b>';
+  $('#artPreview').innerHTML='<img src="'+r.url+'" style="width:100%;max-width:420px;border-radius:10px;border:1px solid var(--line,#2a2c31)"><div class="row" style="margin-top:8px"><button class="btn ghost" onclick="navigator.clipboard.writeText(\''+r.url+'\');toast(\'URL copiada.\')">Copiar URL</button><button class="btn" onclick="addUrlToSched(\''+r.url+'\')">Usar no agendamento</button></div>';
+  toast('Arte gerada!');loadFiles();
+};
+function addUrlToSched(u){
+  const t=$('#agUrls');t.value=t.value?t.value+'\n'+u:u;
+  document.querySelector('[data-s="agendar"]').click();
+  toast('URL adicionada ao agendamento.');
+}
+$('#btnCap').onclick=async()=>{
+  const body={tema:$('#capTema').value,bullets:$('#capBullets').value.split('\n'),tom:$('#capTom').value,pergunta:$('#capPergunta').value};
+  const r=await api('caption',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  r.error?toast('Erro: '+JSON.stringify(r)):($('#capOut').value=r.caption,toast('Legenda gerada!'));
+};
+$('#btnCapUse').onclick=()=>{
+  if(!$('#capOut').value)return;
+  $('#agCaption').value=$('#capOut').value;
+  document.querySelector('[data-s="agendar"]').click();
+  toast('Legenda aplicada ao agendamento.');
+};
+loadFiles();
 loadSummary();loadMedia();loadQueue();loadSched();
 </script>
 </body>

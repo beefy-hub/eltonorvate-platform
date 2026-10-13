@@ -61,7 +61,7 @@ async function handleRequest(request) {
     if (url.pathname === "/panel" || url.pathname === "/panel/") {
       const sess = cookieVal(request, "sess");
       const expect = await hmacHex(PANEL_PASSWORD, PANEL_USER + "|sess");
-      if (!sess || sess !== expect) return Response.redirect("/panel/login", 302);
+      if (!sess || sess !== expect) return Response.redirect(url.origin + "/panel/login", 302);
       const html = await V.get("panel:html");
       if (!html) return new Response("Painel ainda nao publicado (KV panel:html vazio).", { status: 503 });
       return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
@@ -198,7 +198,7 @@ async function handleRequest(request) {
 
     if (url.pathname === "/callback") {
       // Se ja existe token, nao reprocessa o code (evita "code has been used" ao atualizar a pagina)
-      if (await V.get("tok")) return Response.redirect("/", 302);
+      if (await V.get("tok")) return Response.redirect(url.origin + "/", 302);
       const code = url.searchParams.get("code");
       const st = url.searchParams.get("state");
       if (!code) return new Response("no code", { status: 400 });

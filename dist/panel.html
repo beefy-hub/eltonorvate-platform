@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Elton Orvate &#8212; Gest&#227;o Instagram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0b0d;--card:#121316;--line:#2a2c31;--gold:#cda468;--gold2:#d4af6a;--champ:#f5ddb1;--txt:#f5f0e8;--mut:#9a948a;--red:#e06c5b;--green:#7fb069}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:Lato,system-ui,sans-serif;min-height:100vh}
+header{display:flex;align-items:center;gap:14px;padding:18px 28px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0e0f12,var(--bg));position:sticky;top:0;z-index:10}
+header img{width:44px;height:44px;border-radius:50%;border:1px solid var(--gold)}
+header .tt h1{font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold2)}
+header .tt span{font-size:11px;color:var(--mut);letter-spacing:.1em}
+nav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:1px solid transparent;color:var(--mut);font-family:Lato;font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:9px 14px;border-radius:8px;cursor:pointer}
+nav button.on{color:var(--gold2);border-color:var(--gold);background:rgba(205,164,104,.07)}
+main{padding:26px;max-width:1100px;margin:0 auto}
+.sec{display:none}.sec.on{display:block}
+h2{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);margin:22px 0 12px}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.kpi .v{font-size:30px;font-weight:900;color:var(--champ)}
+.kpi .l{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-top:4px}
+.row{display:flex;gap:14px;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid #1b1d21;vertical-align:top}
+a{color:var(--gold2)}
+.btn{background:linear-gradient(135deg,#d4af6a,#b8934a);border:none;border-radius:7px;color:#0a0b0d;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:8px 13px;cursor:pointer}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--mut)}
+.btn.danger{background:none;border:1px solid var(--red);color:var(--red)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+input,textarea,select{width:100%;background:#0d0e10;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:10px 12px;font-size:14px;font-family:Lato;outline:none}
+input:focus,textarea:focus{border-color:var(--gold)}
+label{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:14px 0 6px}
+.pill{display:inline-block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;border-radius:20px;padding:3px 10px;border:1px solid var(--line);color:var(--mut)}
+.pill.ok{color:var(--green);border-color:var(--green)}
+.pill.no{color:var(--red);border-color:var(--red)}
+.mut{color:var(--mut)}.small{font-size:12px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1a1c20;border:1px solid var(--gold);border-radius:10px;padding:12px 20px;font-size:13px;display:none;z-index:50}
+.cap{font-size:12px;color:var(--mut);max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+textarea{min-height:110px}
+.ins{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--mut)}
+.ins b{color:var(--champ);font-size:13px;display:block}
+</style>
+</head>
+<body>
+<header>
+  <img src="https://raw.githubusercontent.com/beefy-hub/eltonorvate-media/main/brand/monograma-eo.png" alt="EO">
+  <div class="tt"><h1>Elton Orvate</h1><span>Painel de Gest&#227;o &#183; Instagram @eltonorvate</span></div>
+  <nav>
+    <button data-s="resumo" class="on">Resumo</button>
+    <button data-s="midias">M&#237;dias</button>
+    <button data-s="comentarios">Coment&#225;rios</button>
+    <button data-s="fila">Fila de Aprova&#231;&#227;o</button>
+    <button data-s="publicar">Publicar</button>
+  </nav>
+</header>
+<main>
+
+<section class="sec on" id="s-resumo">
+  <div class="grid g4" id="kpis"></div>
+  <h2>Insights da conta &#8212; &#250;ltimos 7 dias</h2>
+  <div class="grid g4" id="insAcc"></div>
+  <h2>Conta</h2>
+  <div class="card small mut" id="accInfo">carregando&#8230;</div>
+</section>
+
+<section class="sec" id="s-midias">
+  <h2>&#218;ltimas publica&#231;&#245;es</h2>
+  <div class="card" style="overflow-x:auto"><table id="tblMedia"></table></div>
+</section>
+
+<section class="sec" id="s-comentarios">
+  <h2>Coment&#225;rios por publica&#231;&#227;o</h2>
+  <div class="row" style="margin-bottom:12px;max-width:520px">
+    <select id="selMedia"></select>
+    <button class="btn" id="btnLoadC">Carregar</button>
+  </div>
+  <div id="lstComments" class="grid"></div>
+</section>
+
+<section class="sec" id="s-fila">
+  <h2>Pautas e conte&#250;dos pendentes</h2>
+  <div id="lstQueue" class="grid"></div>
+</section>
+
+<section class="sec" id="s-publicar">
+  <h2>Publicar carrossel agora</h2>
+  <div class="card" style="max-width:640px">
+    <label>URLs das imagens (uma por linha, ordem do carrossel)</label>
+    <textarea id="pubUrls" placeholder="https://&#8230;/final-01.png&#10;https://&#8230;/final-02.png"></textarea>
+    <label>Legenda</label>
+    <textarea id="pubCaption" placeholder="Legenda com hashtags&#8230;"></textarea>
+    <div style="margin-top:16px"><button class="btn" id="btnPub">Publicar agora</button></div>
+    <div class="small mut" id="pubOut" style="margin-top:12px"></div>
+  </div>
+</section>
+
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3200)}
+async function api(p,opt){const r=await fetch('/panel/api/'+p,opt);if(r.status===401){location.href='/panel/login';return}return r.json()}
+const n=v=>(v==null?'\u2014':Number(v).toLocaleString('pt-BR'));
+function insMap(list){const m={};(list||[]).forEach(d=>m[d.name]=d.values&&d.values[0]&&d.values[0].value!==undefined?d.values[0].value:(d.value!==undefined?d.value:null));return m}
+
+$$('nav button').forEach(b=>b.onclick=()=>{$$('nav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$$('.sec').forEach(s=>s.classList.remove('on'));$('#s-'+b.dataset.s).classList.add('on')});
+
+async function loadSummary(){
+  const d=await api('summary');
+  if(!d||d.error)return;
+  const me=d.me||{};
+  $('#kpis').innerHTML=[
+    [n(me.followers_count),'Seguidores'],[n(me.media_count),'Publica\u00e7\u00f5es'],[n(me.follows_count),'Seguindo'],[me.account_type||'\u2014','Tipo de conta']
+  ].map(k=>`<div class="card kpi"><div class="v">${k[0]}</div><div class="l">${k[1]}</div></div>`).join('');
+  const im=insMap(d.insights&&d.insights.data);
+  $('#insAcc').innerHTML=[['reach','Alcance'],['accounts_engaged','Contas engajadas'],['total_interactions','Intera\u00e7\u00f5es'],['profile_views','Views do perfil']]
+    .map(k=>`<div class="card kpi"><div class="v">${n(im[k[0]])}</div><div class="l">${k[1]}</div></div>`).join('');
+  const lim=d.limit&&d.limit.data&&d.limit.data[0];
+  $('#accInfo').innerHTML=`@${me.username||''} \u00b7 ${me.name||''} \u00b7 quota de publica\u00e7\u00e3o hoje: <b style="color:var(--champ)">${lim?lim.quota_usage+'/'+lim.quota_total:'\u2014'}</b>`;
+}
+
+async function loadMedia(){
+  const d=await api('media');if(!d||d.error)return;
+  $('#tblMedia').innerHTML='<tr><th>Data</th><th>Tipo</th><th>Legenda</th><th>M\u00e9tricas</th></tr>'+d.data.map(m=>{
+    const im=insMap(m.insights);
+    const mx=m.media_product_type==='REELS'?[['plays','Plays'],['reach','Alcance'],['likes','Curtidas'],['comments','Coment.'],['shares','Compart.'],['saved','Salvos']]:[['reach','Alcance'],['likes','Curtidas'],['comments','Coment.'],['shares','Compart.'],['saved','Salvos']];
+    return `<tr><td class="mut small">${new Date(m.timestamp).toLocaleDateString('pt-BR')}</td><td>${m.media_product_type||m.media_type}</td>
+      <td class="cap" title="${(m.caption||'').replace(/"/g,'')}">${(m.caption||'\u2014').slice(0,80)}</td>
+      <td class="ins">${mx.map(k=>`<span><b>${n(im[k[0]])}</b>${k[1]}</span>`).join('')||'<span class="mut">\u2014</span>'}</td></tr>`;
+  }).join('');
+  $('#selMedia').innerHTML=d.data.map(m=>`<option value="${m.id}">${new Date(m.timestamp).toLocaleDateString('pt-BR')} \u00b7 ${(m.caption||'sem legenda').slice(0,50)}</option>`).join('');
+}
+
+$('#btnLoadC').onclick=async()=>{
+  const id=$('#selMedia').value;if(!id)return;
+  $('#lstComments').innerHTML='<div class="card mut">carregando\u2026</div>';
+  const d=await api('comments?media_id='+id);
+  const list=(d.data||[]);
+  if(!list.length){$('#lstComments').innerHTML='<div class="card mut">Nenhum coment\u00e1rio.</div>';return}
+  $('#lstComments').innerHTML=list.map(c=>`<div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div><b style="color:var(--gold2)">@${c.username||''}</b> <span class="mut small">${new Date(c.timestamp).toLocaleString('pt-BR')}</span></div>
+      <button class="btn danger" onclick="hideC('${c.id}',this)">Ocultar</button>
+    </div>
+    <p class="small" style="margin:10px 0">${c.text.replace(/</g,'&lt;')}</p>
+    <div class="row"><input id="r-${c.id}" placeholder="Responder como @eltonorvate\u2026" style="flex:1">
+    <button class="btn" onclick="replyC('${c.id}')">Responder</button></div>
+  </div>`).join('');
+};
+async function replyC(id){
+  const msg=$('#r-'+id).value.trim();if(!msg)return;
+  const r=await api('reply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comment_id:id,message:msg})});
+  r.error?toast('Erro: '+JSON.stringify(r)):toast('Resposta enviada.');
+}
+async function hideC(id,btn){
+  if(!confirm('Ocultar este coment\u00e1rio?'))return;
+  const r=await api('hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comment_id:id})});
+  r.error?toast('Erro: '+JSON.stringify(r)):(btn.closest('.card').style.opacity=.35,toast('Coment\u00e1rio ocultado.'));
+}
+
+async function loadQueue(){
+  const d=await api('queue');
+  const list=d.data||[];
+  if(!list.length){$('#lstQueue').innerHTML='<div class="card mut">Fila vazia. As pautas di\u00e1rias aprovadas aparecer\u00e3o aqui.</div>';return}
+  $('#lstQueue').innerHTML=list.map(q=>`<div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div><span class="pill ${q.status==='aprovado'?'ok':q.status==='rejeitado'?'no':''}">${q.status||'pendente'}</span>
+      <b style="margin-left:10px">${q.titulo||q.tipo||q.id}</b></div>
+      <div class="row">
+        <button class="btn" onclick="qAct('${q.id}','approve')">Aprovar</button>
+        <button class="btn ghost" onclick="qAct('${q.id}','reject')">Rejeitar</button>
+      </div>
+    </div>
+    ${q.descricao?`<p class="small mut" style="margin-top:10px">${q.descricao}</p>`:''}
+  </div>`).join('');
+}
+async function qAct(id,action){
+  const r=await api('queue/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action})});
+  r.error?toast('Erro: '+r.error):toast(action==='approve'?'Aprovado!':'Rejeitado.'),loadQueue();
+}
+
+$('#btnPub').onclick=async()=>{
+  const urls=$('#pubUrls').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const caption=$('#pubCaption').value.trim();
+  if(urls.length<2||!caption){toast('Informe pelo menos 2 URLs e a legenda.');return}
+  if(!confirm(`Publicar carrossel com ${urls.length} imagens agora?`))return;
+  $('#btnPub').disabled=true;$('#pubOut').textContent='Publicando\u2026';
+  const r=await api('publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls,caption})});
+  $('#btnPub').disabled=false;
+  if(r.error){$('#pubOut').textContent='Erro: '+JSON.stringify(r);toast('Falha na publica\u00e7\u00e3o.')}
+  else{$('#pubOut').textContent='Publicado: '+JSON.stringify(r.result);toast('Carrossel publicado!')}
+};
+
+loadSummary();loadMedia();loadQueue();
+</script>
+</body>
+</html>

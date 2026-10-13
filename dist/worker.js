@@ -50,6 +50,57 @@ document.getElementById('f').addEventListener('submit', async (ev) => {
 });
 </script></div></body></html>`;
 
+async function publishCarousel(V, urls, caption) {
+  const tok = await V.get("tok");
+  if (!tok) return { ok: 0, error: "no token" };
+  const children = [];
+  for (const u of urls) {
+    const r = await fetch(G + "/me/media", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ image_url: u, is_carousel_item: "true", access_token: tok }).toString()
+    }).then((x) => x.json());
+    if (!r.id) return { ok: 0, error: "falha ao criar item", detail: r };
+    children.push(r.id);
+  }
+  const cont = await fetch(G + "/me/media", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ caption: caption, media_type: "CAROUSEL", children: children.join(","), access_token: tok }).toString()
+  }).then((x) => x.json());
+  if (!cont.id) return { ok: 0, error: "falha ao criar container", detail: cont };
+  const pub = await fetch(G + "/me/media_publish?creation_id=" + encodeURIComponent(cont.id) + "&access_token=" + encodeURIComponent(tok), { method: "POST" }).then((x) => x.json());
+  return { ok: 1, result: pub };
+}
+
+async function runDue(V, dryRun) {
+  const l = await V.list({ prefix: "s:" });
+  const now = Date.now();
+  const out = [];
+  for (const k of l.keys) {
+    const v = await V.get(k.name);
+    let it;
+    try { it = JSON.parse(v); } catch (e) { continue; }
+    if (!it || typeof it !== "object") continue;
+    if (it.status !== "agendado" || !it.run_at || it.run_at > now) continue;
+    if (dryRun) { out.push({ id: k.name, due: 1, caption: (it.caption || "").slice(0, 60) }); continue; }
+    const r = await publishCarousel(V, it.urls, it.caption);
+    it.status = r.ok ? "publicado" : "erro";
+    it.result = r;
+    it.finished_at = Date.now();
+    await V.put(k.name, JSON.stringify(it));
+    out.push({ id: k.name, status: it.status });
+  }
+  return out;
+}
+
+addEventListener("scheduled", (event) => {
+  event.waitUntil((async () => {
+    const r = await runDue(PLATFORM_KV, false);
+    console.log("cron runDue:", JSON.stringify(r));
+  })());
+});
+
 async function handleRequest(request) {
     const url = new URL(request.url);
     const V = PLATFORM_KV;
@@ -57,6 +108,7 @@ async function handleRequest(request) {
 
     if (url.pathname === "/health") return Response.json({ ok: 1, svc: "beefyhub-ig" });
 
+    // ---------- PAINEL ----------
     if (url.pathname === "/panel" || url.pathname === "/panel/") {
       const sess = cookieVal(request, "sess");
       const expect = await hmacHex(PANEL_PASSWORD, PANEL_USER + "|sess");
@@ -180,6 +232,38 @@ async function handleRequest(request) {
         return Response.json({ ok: 1, result: pub });
       }
 
+      if (url.pathname === "/panel/api/schedule" && request.method === "GET") {
+        const l = await V.list({ prefix: "s:" });
+        const items = await Promise.all(l.keys.map(async (k) => {
+          const v = await V.get(k.name);
+          try { return { id: k.name, ...JSON.parse(v) }; } catch (e) { return { id: k.name, raw: v }; }
+        }));
+        items.sort((a, b) => (a.run_at || 0) - (b.run_at || 0));
+        return Response.json({ data: items, now: Date.now() });
+      }
+
+      if (url.pathname === "/panel/api/schedule" && request.method === "POST") {
+        const b = await request.json().catch(() => ({}));
+        if (!b.urls || !b.urls.length || !b.caption || !b.run_at) return Response.json({ error: "urls, caption e run_at sao obrigatorios" }, { status: 400 });
+        const id = "s:" + Date.now();
+        const item = { urls: b.urls, caption: b.caption, run_at: Number(b.run_at), status: "agendado", created_at: Date.now() };
+        await V.put(id, JSON.stringify(item));
+        return Response.json({ ok: 1, id, item });
+      }
+
+      if (url.pathname === "/panel/api/schedule/delete" && request.method === "POST") {
+        const b = await request.json().catch(() => ({}));
+        if (!b.id || b.id.indexOf("s:") !== 0) return Response.json({ error: "id invalido" }, { status: 400 });
+        await V.delete(b.id);
+        return Response.json({ ok: 1 });
+      }
+
+      if (url.pathname === "/panel/api/schedule/run-now" && request.method === "POST") {
+        const b = await request.json().catch(() => ({}));
+        const r = await runDue(V, !!b.dry_run);
+        return Response.json({ ran: r });
+      }
+
       return Response.json({ error: "rota nao encontrada" }, { status: 404 });
     }
 
@@ -196,6 +280,7 @@ async function handleRequest(request) {
     }
 
     if (url.pathname === "/callback") {
+      // Se ja existe token, nao reprocessa o code (evita "code has been used" ao atualizar a pagina)
       if (await V.get("tok")) return Response.redirect(url.origin + "/", 302);
       const code = url.searchParams.get("code");
       const st = url.searchParams.get("state");

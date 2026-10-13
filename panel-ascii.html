@@ -57,6 +57,7 @@ textarea{min-height:110px}
     <button data-s="midias">M&#237;dias</button>
     <button data-s="comentarios">Coment&#225;rios</button>
     <button data-s="fila">Fila de Aprova&#231;&#227;o</button>
+    <button data-s="agendar">Agendar</button>
     <button data-s="publicar">Publicar</button>
   </nav>
 </header>
@@ -87,6 +88,25 @@ textarea{min-height:110px}
 <section class="sec" id="s-fila">
   <h2>Pautas e conte&#250;dos pendentes</h2>
   <div id="lstQueue" class="grid"></div>
+</section>
+
+<section class="sec" id="s-agendar">
+  <h2>Publica&#231;&#245;es agendadas</h2>
+  <div id="lstSched" class="grid"></div>
+  <h2>Novo agendamento</h2>
+  <div class="card" style="max-width:640px">
+    <label>URLs das imagens (uma por linha, ordem do carrossel)</label>
+    <textarea id="agUrls" placeholder="https://&#8230;/final-01.png&#10;https://&#8230;/final-02.png"></textarea>
+    <label>Legenda</label>
+    <textarea id="agCaption" placeholder="Legenda com hashtags&#8230;"></textarea>
+    <label>Data e hora (Bras&#237;lia)</label>
+    <input id="agWhen" type="datetime-local">
+    <div class="row" style="margin-top:16px">
+      <button class="btn" id="btnAg">Agendar</button>
+      <button class="btn ghost" id="btnDry">Verificar vencidos (simula&#231;&#227;o)</button>
+    </div>
+    <div class="small mut" id="agOut" style="margin-top:12px"></div>
+  </div>
 </section>
 
 <section class="sec" id="s-publicar">
@@ -198,7 +218,43 @@ $('#btnPub').onclick=async()=>{
   else{$('#pubOut').textContent='Publicado: '+JSON.stringify(r.result);toast('Carrossel publicado!')}
 };
 
-loadSummary();loadMedia();loadQueue();
+async function loadSched(){
+  const d=await api('schedule');
+  const list=d.data||[];
+  const fmt=ts=>new Date(ts).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  if(!list.length){$('#lstSched').innerHTML='<div class="card mut">Nenhuma publica\u00e7\u00e3o agendada. O sistema publica sozinho nos hor\u00e1rios marcados (7h e 20h, hor\u00e1rio de Bras\u00edlia).</div>';return}
+  $('#lstSched').innerHTML=list.map(s=>`<div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div><span class="pill ${s.status==='publicado'?'ok':s.status==='erro'?'no':''}">${s.status||'agendado'}</span>
+      <b style="margin-left:10px">${s.run_at?fmt(s.run_at):'\u2014'}</b>
+      <span class="mut small" style="margin-left:8px">${(s.urls||[]).length} imagem(ns)</span></div>
+      ${s.status==='agendado'?`<button class="btn danger" onclick="delSched('${s.id}')">Cancelar</button>`:''}
+    </div>
+    <p class="small mut" style="margin-top:8px">${(s.caption||'').slice(0,140)}</p>
+  </div>`).join('');
+}
+async function delSched(id){
+  if(!confirm('Cancelar este agendamento?'))return;
+  const r=await api('schedule/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+  r.error?toast('Erro: '+r.error):(toast('Agendamento cancelado.'),loadSched());
+}
+$('#btnAg').onclick=async()=>{
+  const urls=$('#agUrls').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const caption=$('#agCaption').value.trim();
+  const when=$('#agWhen').value;
+  if(urls.length<2||!caption||!when){toast('Informe URLs, legenda e data/hora.');return}
+  const runAt=new Date(when+'-03:00').getTime();
+  const r=await api('schedule',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls,caption,run_at:runAt})});
+  if(r.error){$('#agOut').textContent='Erro: '+JSON.stringify(r);return}
+  $('#agOut').textContent='Agendado para '+new Date(runAt).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+'.';
+  toast('Agendamento criado!');loadSched();
+};
+$('#btnDry').onclick=async()=>{
+  const r=await api('schedule/run-now',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dry_run:true})});
+  $('#agOut').textContent='Simula\u00e7\u00e3o: '+(r.ran&&r.ran.length?JSON.stringify(r.ran):'nenhum post vencido no momento.');
+};
+
+loadSummary();loadMedia();loadQueue();loadSched();
 </script>
 </body>
 </html>

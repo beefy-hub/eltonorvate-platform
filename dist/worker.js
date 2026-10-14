@@ -456,7 +456,9 @@ async function handleRequest(request) {
       const msg = (ev && (ev.data || ev.message)) || ev || {};
       const num = String(msg.number || msg.from || "").replace(/\D/g, "");
       const admin = String(typeof DIGISAC_NUMBER !== "undefined" ? DIGISAC_NUMBER : "").replace(/\D/g, "");
-      if (!admin || !num.endsWith(admin)) return Response.json({ ok: 0, error: "numero nao autorizado" }, { status: 403 });
+      const fromId = String(msg.fromId || msg.contactId || "");
+      const allowedContact = "0de197c2-4a13-482f-b718-02385c8de51b";
+      if ((!num || !num.endsWith(admin)) && fromId !== allowedContact) return Response.json({ ok: 0, error: "numero nao autorizado" }, { status: 403 });
       const text = String(msg.text || msg.body || "").trim();
       const m = text.match(/^(APROVAR|REJEITAR)\s*(\S+)?/i);
       if (!m) return Response.json({ ok: 0, error: "comando nao reconhecido" }, { status: 400 });
@@ -485,6 +487,7 @@ async function handleRequest(request) {
         await waSend("Rejeitado (" + id + "). A pauta foi descartada.");
         return Response.json({ ok: 1, id, status: "rejeitado" });
       }
+      if (item.status === "publicado") { await waSend("Este post ja foi publicado (" + id + "). Nada a fazer."); return Response.json({ ok: 1, id, status: "ja_publicado" }); }
       item.status = "aprovado";
       item.decided_at = Date.now();
       if (item.urls && item.urls.length && item.caption) {

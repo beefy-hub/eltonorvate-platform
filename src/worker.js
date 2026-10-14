@@ -69,8 +69,22 @@ async function publishCarousel(V, urls, caption) {
     body: new URLSearchParams({ caption: caption, media_type: "CAROUSEL", children: children.join(","), access_token: tok }).toString()
   }).then((x) => x.json());
   if (!cont.id) return { ok: 0, error: "falha ao criar container", detail: cont };
-  const pub = await fetch(G + "/me/media_publish?creation_id=" + encodeURIComponent(cont.id) + "&access_token=" + encodeURIComponent(tok), { method: "POST" }).then((x) => x.json());
-  return { ok: 1, result: pub };
+  // aguarda o container do carrossel ficar pronto (IN_PROGRESS -> FINISHED)
+  let ready = false;
+  for (let i = 0; i < 15; i++) {
+    await new Promise((r) => setTimeout(r, 3000));
+    const st = await fetch(G + "/" + cont.id + "?fields=status_code&access_token=" + encodeURIComponent(tok)).then((x) => x.json()).catch(() => null);
+    if (st && (st.status_code === "FINISHED" || st.status_code === "PUBLISHED")) { ready = true; break; }
+    if (st && st.status_code === "ERROR") return { ok: 0, error: "container com erro", detail: st, creation_id: cont.id };
+  }
+  if (!ready) return { ok: 0, error: "container nao ficou pronto a tempo", creation_id: cont.id };
+  let pub = null;
+  for (let i = 0; i < 4; i++) {
+    pub = await fetch(G + "/me/media_publish?creation_id=" + encodeURIComponent(cont.id) + "&access_token=" + encodeURIComponent(tok), { method: "POST" }).then((x) => x.json());
+    if (pub && pub.id) break;
+    await new Promise((r) => setTimeout(r, 5000));
+  }
+  return { ok: pub && pub.id ? 1 : 0, result: pub, creation_id: cont.id };
 }
 
 async function waSend(text) {
@@ -117,6 +131,11 @@ function buildCaption(b) {
   return cap;
 }
 
+function runAtMs(it) {
+  const ra = Number(it.run_at) || 0;
+  return ra > 1e12 ? ra : ra * 1000; // aceita segundos ou milissegundos
+}
+
 async function runDue(V, dryRun) {
   const l = await V.list({ prefix: "s:" });
   const now = Date.now();
@@ -126,7 +145,7 @@ async function runDue(V, dryRun) {
     let it;
     try { it = JSON.parse(v); } catch (e) { continue; }
     if (!it || typeof it !== "object") continue;
-    if (it.status !== "agendado" || !it.run_at || it.run_at > now) continue;
+    if (it.status !== "agendado" || !it.run_at || runAtMs(it) > now) continue;
     if (dryRun) { out.push({ id: k.name, due: 1, caption: (it.caption || "").slice(0, 60) }); continue; }
     const r = await publishCarousel(V, it.urls, it.caption);
     it.status = r.ok ? "publicado" : "erro";

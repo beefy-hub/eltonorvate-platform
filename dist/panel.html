@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Elton Orvate  Gestao Instagram</title>
+<title>Elton Orvate — Gestão Instagram</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -51,13 +51,14 @@ textarea{min-height:110px}
 <body>
 <header>
   <img src="https://raw.githubusercontent.com/beefy-hub/eltonorvate-media/main/brand/monograma-eo.png" alt="EO">
-  <div class="tt"><h1>Elton Orvate</h1><span>Painel de Gestao  Instagram @eltonorvate</span></div>
+  <div class="tt"><h1>Elton Orvate</h1><span>Painel de Gestão · Instagram @eltonorvate</span></div>
   <nav>
     <button data-s="resumo" class="on">Resumo</button>
-    <button data-s="midias">Midias</button>
-    <button data-s="comentarios">Comentarios</button>
-    <button data-s="fila">Fila de Aprovacao</button>
+    <button data-s="midias">Mídias</button>
+    <button data-s="comentarios">Comentários</button>
+    <button data-s="fila">Fila de Aprovação</button>
     <button data-s="agendar">Agendar</button>
+    <button data-s="arte">Arte e Textos</button>
     <button data-s="publicar">Publicar</button>
   </nav>
 </header>
@@ -65,19 +66,19 @@ textarea{min-height:110px}
 
 <section class="sec on" id="s-resumo">
   <div class="grid g4" id="kpis"></div>
-  <h2>Insights da conta  ultimos 7 dias</h2>
+  <h2>Insights da conta — últimos 7 dias</h2>
   <div class="grid g4" id="insAcc"></div>
   <h2>Conta</h2>
-  <div class="card small mut" id="accInfo">carregando...</div>
+  <div class="card small mut" id="accInfo">carregando…</div>
 </section>
 
 <section class="sec" id="s-midias">
-  <h2>Ultimas publicacoes</h2>
+  <h2>Últimas publicações</h2>
   <div class="card" style="overflow-x:auto"><table id="tblMedia"></table></div>
 </section>
 
 <section class="sec" id="s-comentarios">
-  <h2>Comentarios por publicacao</h2>
+  <h2>Comentários por publicação</h2>
   <div class="row" style="margin-bottom:12px;max-width:520px">
     <select id="selMedia"></select>
     <button class="btn" id="btnLoadC">Carregar</button>
@@ -86,27 +87,76 @@ textarea{min-height:110px}
 </section>
 
 <section class="sec" id="s-fila">
-  <h2>Pautas e conteudos pendentes</h2>
+  <h2>Pautas e conteúdos pendentes</h2>
   <div id="lstQueue" class="grid"></div>
 </section>
 
 <section class="sec" id="s-agendar">
-  <h2>Publicacoes agendadas</h2>
+  <h2>Publicações agendadas</h2>
   <div id="lstSched" class="grid"></div>
   <h2>Novo agendamento</h2>
   <div class="card" style="max-width:640px">
     <label>URLs das imagens (uma por linha, ordem do carrossel)</label>
-    <textarea id="agUrls" placeholder="https://.../final-01.png&#10;https://.../final-02.png"></textarea>
+    <textarea id="agUrls" placeholder="https://…/final-01.png&#10;https://…/final-02.png"></textarea>
     <label>Legenda</label>
-    <textarea id="agCaption" placeholder="Legenda com hashtags..."></textarea>
-    <label>Data e hora (Brasilia)</label>
+    <textarea id="agCaption" placeholder="Legenda com hashtags…"></textarea>
+    <label>Data e hora (Brasília)</label>
     <input id="agWhen" type="datetime-local">
     <div class="row" style="margin-top:16px">
       <button class="btn" id="btnAg">Agendar</button>
-      <button class="btn ghost" id="btnDry">Verificar vencidos (simulacao)</button>
+      <button class="btn ghost" id="btnDry">Verificar vencidos (simulação)</button>
       <button class="btn ghost" id="btnWaTest">Testar WhatsApp</button>
     </div>
     <div class="small mut" id="agOut" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<section class="sec" id="s-arte">
+  <h2>Biblioteca de arquivos</h2>
+  <div class="card" style="max-width:640px">
+    <div class="row">
+      <input type="file" id="fileIn" accept="image/png,image/jpeg,image/webp" style="flex:1">
+      <button class="btn" id="btnUp">Enviar</button>
+    </div>
+    <div class="small mut" id="upOut" style="margin-top:10px"></div>
+  </div>
+  <div id="lstFiles" class="grid" style="margin-top:14px"></div>
+
+  <h2>Gerador de arte (1080x1350)</h2>
+  <div class="card" style="max-width:640px">
+    <label>Titulo do slide</label>
+    <input id="artTitulo" placeholder="Ex.: A abstencao vai decidir o 2o turno">
+    <label>Destaques (um por linha, ate 5)</label>
+    <textarea id="artLinhas" placeholder="31,3 milhoes de votos em branco, nulos e ausentes&#10;Mais que a diferenca entre os dois candidatos"></textarea>
+    <label>Rodape (pergunta / CTA)</label>
+    <input id="artRodape" placeholder="Voce votou ou anulou? Comenta aqui.">
+    <label>Foto (nome do arquivo na biblioteca OU url https) - opcional</label>
+    <input id="artFoto" placeholder="ex.: foto-candidato.jpg ou https://…">
+    <div class="row" style="margin-top:16px">
+      <input id="artNumero" placeholder="3/10" style="max-width:90px">
+      <button class="btn" id="btnArt">Gerar arte</button>
+    </div>
+    <div class="small mut" id="artOut" style="margin-top:12px"></div>
+    <div id="artPreview" style="margin-top:12px"></div>
+  </div>
+
+  <h2>Gerador de legenda</h2>
+  <div class="card" style="max-width:640px">
+    <label>Tema / pauta</label>
+    <input id="capTema" placeholder="Ex.: abstencao recorde no 1o turno">
+    <label>Dados / argumentos (um por linha)</label>
+    <textarea id="capBullets" placeholder="31,3 mi de votos nulos/brancos/ausentes&#10;Quem nao foi urna decide o segundo turno"></textarea>
+    <label>Tom</label>
+    <select id="capTom">
+      <option value="critico">Critico (menos Estado, mais empreendedorismo)</option>
+      <option value="dados">Dados / tecnico</option>
+      <option value="motivacional">Motivacional / gestao</option>
+    </select>
+    <label>Pergunta de engajamento</label>
+    <input id="capPergunta" placeholder="Voce votou ou anulou?">
+    <div style="margin-top:16px"><button class="btn" id="btnCap">Gerar legenda</button></div>
+    <textarea id="capOut" style="margin-top:12px;min-height:220px" placeholder="A legenda gerada aparece aqui…"></textarea>
+    <div style="margin-top:10px"><button class="btn ghost" id="btnCapUse">Usar no agendamento</button></div>
   </div>
 </section>
 
@@ -114,9 +164,9 @@ textarea{min-height:110px}
   <h2>Publicar carrossel agora</h2>
   <div class="card" style="max-width:640px">
     <label>URLs das imagens (uma por linha, ordem do carrossel)</label>
-    <textarea id="pubUrls" placeholder="https://.../final-01.png&#10;https://.../final-02.png"></textarea>
+    <textarea id="pubUrls" placeholder="https://…/final-01.png&#10;https://…/final-02.png"></textarea>
     <label>Legenda</label>
-    <textarea id="pubCaption" placeholder="Legenda com hashtags..."></textarea>
+    <textarea id="pubCaption" placeholder="Legenda com hashtags…"></textarea>
     <div style="margin-top:16px"><button class="btn" id="btnPub">Publicar agora</button></div>
     <div class="small mut" id="pubOut" style="margin-top:12px"></div>
   </div>
@@ -128,7 +178,7 @@ textarea{min-height:110px}
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3200)}
 async function api(p,opt){const r=await fetch('/panel/api/'+p,opt);if(r.status===401){location.href='/panel/login';return}return r.json()}
-const n=v=>(v==null?'':Number(v).toLocaleString('pt-BR'));
+const n=v=>(v==null?'—':Number(v).toLocaleString('pt-BR'));
 function insMap(list){const m={};(list||[]).forEach(d=>m[d.name]=d.values&&d.values[0]&&d.values[0].value!==undefined?d.values[0].value:(d.value!==undefined?d.value:null));return m}
 
 $$('nav button').forEach(b=>b.onclick=()=>{$$('nav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$$('.sec').forEach(s=>s.classList.remove('on'));$('#s-'+b.dataset.s).classList.add('on')});
@@ -138,40 +188,40 @@ async function loadSummary(){
   if(!d||d.error)return;
   const me=d.me||{};
   $('#kpis').innerHTML=[
-    [n(me.followers_count),'Seguidores'],[n(me.media_count),'Publicacoes'],[n(me.follows_count),'Seguindo'],[me.account_type||'','Tipo de conta']
+    [n(me.followers_count),'Seguidores'],[n(me.media_count),'Publicações'],[n(me.follows_count),'Seguindo'],[me.account_type||'—','Tipo de conta']
   ].map(k=>`<div class="card kpi"><div class="v">${k[0]}</div><div class="l">${k[1]}</div></div>`).join('');
   const im=insMap(d.insights&&d.insights.data);
-  $('#insAcc').innerHTML=[['reach','Alcance'],['accounts_engaged','Contas engajadas'],['total_interactions','Interacoes'],['profile_views','Views do perfil']]
+  $('#insAcc').innerHTML=[['reach','Alcance'],['accounts_engaged','Contas engajadas'],['total_interactions','Interações'],['profile_views','Views do perfil']]
     .map(k=>`<div class="card kpi"><div class="v">${n(im[k[0]])}</div><div class="l">${k[1]}</div></div>`).join('');
   const lim=d.limit&&d.limit.data&&d.limit.data[0];
-  $('#accInfo').innerHTML=`@${me.username||''}  ${me.name||''}  quota de publicacao hoje: <b style="color:var(--champ)">${lim?lim.quota_usage+'/'+lim.quota_total:''}</b>`;
+  $('#accInfo').innerHTML=`@${me.username||''} · ${me.name||''} · quota de publicação hoje: <b style="color:var(--champ)">${lim?lim.quota_usage+'/'+lim.quota_total:'—'}</b>`;
 }
 
 async function loadMedia(){
   const d=await api('media');if(!d||d.error)return;
-  $('#tblMedia').innerHTML='<tr><th>Data</th><th>Tipo</th><th>Legenda</th><th>Metricas</th></tr>'+d.data.map(m=>{
+  $('#tblMedia').innerHTML='<tr><th>Data</th><th>Tipo</th><th>Legenda</th><th>Métricas</th></tr>'+d.data.map(m=>{
     const im=insMap(m.insights);
     const mx=m.media_product_type==='REELS'?[['plays','Plays'],['reach','Alcance'],['likes','Curtidas'],['comments','Coment.'],['shares','Compart.'],['saved','Salvos']]:[['reach','Alcance'],['likes','Curtidas'],['comments','Coment.'],['shares','Compart.'],['saved','Salvos']];
     return `<tr><td class="mut small">${new Date(m.timestamp).toLocaleDateString('pt-BR')}</td><td>${m.media_product_type||m.media_type}</td>
-      <td class="cap" title="${(m.caption||'').replace(/"/g,'')}">${(m.caption||'').slice(0,80)}</td>
-      <td class="ins">${mx.map(k=>`<span><b>${n(im[k[0]])}</b>${k[1]}</span>`).join('')||'<span class="mut"></span>'}</td></tr>`;
+      <td class="cap" title="${(m.caption||'').replace(/"/g,'')}">${(m.caption||'—').slice(0,80)}</td>
+      <td class="ins">${mx.map(k=>`<span><b>${n(im[k[0]])}</b>${k[1]}</span>`).join('')||'<span class="mut">—</span>'}</td></tr>`;
   }).join('');
-  $('#selMedia').innerHTML=d.data.map(m=>`<option value="${m.id}">${new Date(m.timestamp).toLocaleDateString('pt-BR')}  ${(m.caption||'sem legenda').slice(0,50)}</option>`).join('');
+  $('#selMedia').innerHTML=d.data.map(m=>`<option value="${m.id}">${new Date(m.timestamp).toLocaleDateString('pt-BR')} · ${(m.caption||'sem legenda').slice(0,50)}</option>`).join('');
 }
 
 $('#btnLoadC').onclick=async()=>{
   const id=$('#selMedia').value;if(!id)return;
-  $('#lstComments').innerHTML='<div class="card mut">carregando...</div>';
+  $('#lstComments').innerHTML='<div class="card mut">carregando…</div>';
   const d=await api('comments?media_id='+id);
   const list=(d.data||[]);
-  if(!list.length){$('#lstComments').innerHTML='<div class="card mut">Nenhum comentario.</div>';return}
+  if(!list.length){$('#lstComments').innerHTML='<div class="card mut">Nenhum comentário.</div>';return}
   $('#lstComments').innerHTML=list.map(c=>`<div class="card">
     <div class="row" style="justify-content:space-between">
       <div><b style="color:var(--gold2)">@${c.username||''}</b> <span class="mut small">${new Date(c.timestamp).toLocaleString('pt-BR')}</span></div>
       <button class="btn danger" onclick="hideC('${c.id}',this)">Ocultar</button>
     </div>
     <p class="small" style="margin:10px 0">${c.text.replace(/</g,'&lt;')}</p>
-    <div class="row"><input id="r-${c.id}" placeholder="Responder como @eltonorvate..." style="flex:1">
+    <div class="row"><input id="r-${c.id}" placeholder="Responder como @eltonorvate…" style="flex:1">
     <button class="btn" onclick="replyC('${c.id}')">Responder</button></div>
   </div>`).join('');
 };
@@ -181,15 +231,15 @@ async function replyC(id){
   r.error?toast('Erro: '+JSON.stringify(r)):toast('Resposta enviada.');
 }
 async function hideC(id,btn){
-  if(!confirm('Ocultar este comentario?'))return;
+  if(!confirm('Ocultar este comentário?'))return;
   const r=await api('hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comment_id:id})});
-  r.error?toast('Erro: '+JSON.stringify(r)):(btn.closest('.card').style.opacity=.35,toast('Comentario ocultado.'));
+  r.error?toast('Erro: '+JSON.stringify(r)):(btn.closest('.card').style.opacity=.35,toast('Comentário ocultado.'));
 }
 
 async function loadQueue(){
   const d=await api('queue');
   const list=d.data||[];
-  if(!list.length){$('#lstQueue').innerHTML='<div class="card mut">Fila vazia. As pautas diarias aprovadas aparecerao aqui.</div>';return}
+  if(!list.length){$('#lstQueue').innerHTML='<div class="card mut">Fila vazia. As pautas diárias aprovadas aparecerão aqui.</div>';return}
   $('#lstQueue').innerHTML=list.map(q=>`<div class="card">
     <div class="row" style="justify-content:space-between">
       <div><span class="pill ${q.status==='aprovado'?'ok':q.status==='rejeitado'?'no':''}">${q.status||'pendente'}</span>
@@ -217,10 +267,10 @@ $('#btnPub').onclick=async()=>{
   const caption=$('#pubCaption').value.trim();
   if(urls.length<2||!caption){toast('Informe pelo menos 2 URLs e a legenda.');return}
   if(!confirm(`Publicar carrossel com ${urls.length} imagens agora?`))return;
-  $('#btnPub').disabled=true;$('#pubOut').textContent='Publicando...';
+  $('#btnPub').disabled=true;$('#pubOut').textContent='Publicando…';
   const r=await api('publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls,caption})});
   $('#btnPub').disabled=false;
-  if(r.error){$('#pubOut').textContent='Erro: '+JSON.stringify(r);toast('Falha na publicacao.')}
+  if(r.error){$('#pubOut').textContent='Erro: '+JSON.stringify(r);toast('Falha na publicação.')}
   else{$('#pubOut').textContent='Publicado: '+JSON.stringify(r.result);toast('Carrossel publicado!')}
 };
 
@@ -228,11 +278,11 @@ async function loadSched(){
   const d=await api('schedule');
   const list=d.data||[];
   const fmt=ts=>new Date(ts).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-  if(!list.length){$('#lstSched').innerHTML='<div class="card mut">Nenhuma publicacao agendada. O sistema publica sozinho nos horarios marcados (7h e 20h, horario de Brasilia).</div>';return}
+  if(!list.length){$('#lstSched').innerHTML='<div class="card mut">Nenhuma publicação agendada. O sistema publica sozinho nos horários marcados (7h e 20h, horário de Brasília).</div>';return}
   $('#lstSched').innerHTML=list.map(s=>`<div class="card">
     <div class="row" style="justify-content:space-between">
       <div><span class="pill ${s.status==='publicado'?'ok':s.status==='erro'?'no':''}">${s.status||'agendado'}</span>
-      <b style="margin-left:10px">${s.run_at?fmt(s.run_at):''}</b>
+      <b style="margin-left:10px">${s.run_at?fmt(s.run_at):'—'}</b>
       <span class="mut small" style="margin-left:8px">${(s.urls||[]).length} imagem(ns)</span></div>
       ${s.status==='agendado'?`<button class="btn danger" onclick="delSched('${s.id}')">Cancelar</button>`:''}
     </div>
@@ -262,9 +312,171 @@ $('#btnWaTest').onclick=async()=>{
 };
 $('#btnDry').onclick=async()=>{
   const r=await api('schedule/run-now',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dry_run:true})});
-  $('#agOut').textContent='Simulacao: '+(r.ran&&r.ran.length?JSON.stringify(r.ran):'nenhum post vencido no momento.');
+  $('#agOut').textContent='Simulação: '+(r.ran&&r.ran.length?JSON.stringify(r.ran):'nenhum post vencido no momento.');
 };
 
+// ----- Arte e Textos -----
+let dlFiles=document.createElement('datalist');dlFiles.id='dlFiles';document.body.appendChild(dlFiles);
+$('#artFoto').setAttribute('list','dlFiles');
+async function loadFiles(){
+  const d=await api('files');const idx=d.data||{};
+  const names=Object.keys(idx).sort((a,b)=>(idx[b].ts||0)-(idx[a].ts||0));
+  dlFiles.innerHTML=names.map(n=>'<option value="'+n+'">').join('');
+  if(!names.length){$('#lstFiles').innerHTML='<div class="card mut">Nenhum arquivo. Envie imagens para usar nas artes e nos posts.</div>';return}
+  $('#lstFiles').innerHTML=names.map(n=>{const m=idx[n];return `<div class="card">
+    <img src="/file/${n}" style="width:100%;border-radius:8px;display:block" loading="lazy">
+    <div class="small mut" style="margin-top:8px;word-break:break-all">${n}</div>
+    <div class="small mut">${((m.size||0)/1024).toFixed(0)} KB</div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn ghost" onclick="navigator.clipboard.writeText(location.origin+'/file/${n}');toast('URL copiada.')">Copiar URL</button>
+      <button class="btn danger" onclick="delFile('${n}')">Excluir</button>
+    </div>
+  </div>`}).join('');
+}
+async function delFile(name){
+  if(!confirm('Excluir '+name+'?'))return;
+  const r=await api('files/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  r.error?toast('Erro: '+r.error):(toast('Arquivo excluido.'),loadFiles());
+}
+$('#btnUp').onclick=async()=>{
+  const f=$('#fileIn').files[0];if(!f){toast('Escolha um arquivo.');return}
+  if(f.size>12*1024*1024){toast('Maximo 12MB.');return}
+  $('#btnUp').disabled=true;$('#upOut').textContent='Enviando…';
+  const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(f)});
+  const name=f.name.toLowerCase().replace(/[^a-z0-9._-]+/g,'-');
+  const r=await api('files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,ct:f.type,data:b64})});
+  $('#btnUp').disabled=false;
+  if(r.error){$('#upOut').textContent='Erro: '+JSON.stringify(r);toast('Falha no envio.');return}
+  $('#upOut').textContent='Enviado: '+r.url;$('#fileIn').value='';toast('Arquivo enviado!');loadFiles();
+};
+const EO_ASSETS='https://cdn.jsdelivr.net/gh/beefy-hub/eltonorvate-platform@main/assets';
+let EO_FONTS=null;
+async function eoFonts(){
+  if(EO_FONTS)return EO_FONTS;
+  for(const d of [['EO-400','playfair-400.ttf'],['EO-700','playfair-700.ttf'],['EO-IT','playfair-italic.ttf']]){
+    const f=new FontFace(d[0],'url('+EO_ASSETS+'/'+d[1]+')');
+    await f.load();document.fonts.add(f);
+  }
+  EO_FONTS=1;return 1;
+}
+function eoWrap(ctx,text,maxW,maxLines){
+  const words=String(text).split(/\s+/).filter(Boolean);const lines=[];let cur='';
+  for(const w of words){
+    const t=cur?cur+' '+w:w;
+    if(ctx.measureText(t).width>maxW&&cur){lines.push(cur);cur=w}else cur=t;
+  }
+  if(cur)lines.push(cur);
+  return lines.slice(0,maxLines||6);
+}
+function eoLoadImg(src){
+  return new Promise((res,rej)=>{
+    const im=new Image();
+    if(/^https?:\/\//.test(src)&&src.indexOf(location.host)<0)im.crossOrigin='anonymous';
+    im.onload=()=>res(im);
+    im.onerror=()=>rej(new Error('imagem indisponivel (URL invalida ou sem permissao CORS): '+src));
+    im.src=src;
+  });
+}
+async function eoGenerate(){
+  await eoFonts();
+  const titulo=$('#artTitulo').value.trim()||'Analise do dia';
+  const linhas=$('#artLinhas').value.split('\n').map(x=>x.trim()).filter(Boolean).slice(0,5);
+  const rodape=$('#artRodape').value.trim();
+  const numero=$('#artNumero').value.trim();
+  const foto=$('#artFoto').value.trim();
+  const W=1080,H=1350,GOLD='#d4af6a',CREAM='#f5f0e8',MUTE='#9a948a',BG='#0a0b0d';
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+  const hasFoto=!!foto;
+  if(hasFoto){
+    const src=/^https?:\/\//.test(foto)?foto:location.origin+'/file/'+foto.replace(/^\/file\//,'');
+    const im=await eoLoadImg(src);
+    const s=Math.max(W/im.width,H/im.height);
+    ctx.drawImage(im,(W-im.width*s)/2,(H-im.height*s)/2,im.width*s,im.height*s);
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'rgba(0,0,0,0.30)');g.addColorStop(0.45,'rgba(0,0,0,0.72)');g.addColorStop(1,'rgba(0,0,0,0.92)');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  }
+  ctx.strokeStyle=GOLD;ctx.lineWidth=2;ctx.strokeRect(36,36,W-72,H-72);
+  ctx.globalAlpha=0.35;ctx.lineWidth=1;ctx.strokeRect(50,50,W-100,H-100);ctx.globalAlpha=1;
+  const kickY=hasFoto?620:158;
+  if('letterSpacing' in ctx)ctx.letterSpacing='6px';
+  ctx.fillStyle=GOLD;ctx.font='700 30px "EO-700"';
+  ctx.fillText('ELTON ORVATE',90,kickY);
+  if('letterSpacing' in ctx)ctx.letterSpacing='4px';
+  ctx.font='22px "EO-400"';ctx.fillStyle=MUTE;
+  ctx.fillText('ANALISE DO DIA',90,kickY+38);
+  if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+  ctx.fillStyle=CREAM;ctx.font='700 62px "EO-700"';
+  let y=kickY+128;
+  for(const ln of eoWrap(ctx,titulo,900,3)){ctx.fillText(ln,90,y);y+=78}
+  y+=26;
+  let bc=0;
+  for(const blt of linhas){
+    if(bc>=4&&hasFoto)break;
+    ctx.font='38px "EO-400"';
+    const ls=eoWrap(ctx,blt,880,3);
+    let first=true;
+    for(const ln of ls){
+      if(first){ctx.fillStyle=GOLD;ctx.fillText('\u2014',90,y)}
+      ctx.fillStyle=CREAM;ctx.fillText(ln,126,y);
+      y+=56;first=false;
+    }
+    y+=14;bc++;
+    if(y>H-320)break;
+  }
+  if(rodape){
+    ctx.fillStyle=GOLD;ctx.font='italic 36px "EO-IT"';
+    const rl=eoWrap(ctx,rodape,900,2);
+    let ry=H-150-(rl.length-1)*48;
+    for(const ln of rl){ctx.fillText(ln,90,ry);ry+=48}
+  }
+  const selo=await eoLoadImg(EO_ASSETS+'/selo-eo.png');
+  ctx.drawImage(selo,W-268,H-296,172,172);
+  if(numero){
+    if('letterSpacing' in ctx)ctx.letterSpacing='3px';
+    ctx.fillStyle=MUTE;ctx.font='26px "EO-400"';
+    ctx.fillText(numero,90,H-96);
+    if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+  }
+  const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+  if(!blob)throw new Error('falha ao exportar PNG');
+  const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(blob)});
+  const name='art-'+Date.now()+'.png';
+  const r=await api('files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,ct:'image/png',data:b64})});
+  if(r.error)throw new Error(JSON.stringify(r));
+  return r.url;
+}
+$('#btnArt').onclick=async()=>{
+  $('#btnArt').disabled=true;$('#artOut').textContent='Renderizando a arte aqui no navegador e salvando na biblioteca…';
+  try{
+    const url=await eoGenerate();
+    $('#artOut').innerHTML='Arte pronta: <b>'+url+'</b>';
+    $('#artPreview').innerHTML='<img src="'+url+'" style="width:100%;max-width:420px;border-radius:10px;border:1px solid var(--line,#2a2c31)"><div class="row" style="margin-top:8px"><button class="btn ghost" onclick="navigator.clipboard.writeText(\''+url+'\');toast(\'URL copiada.\')">Copiar URL</button><button class="btn" onclick="addUrlToSched(\''+url+'\')">Usar no agendamento</button></div>';
+    toast('Arte gerada e salva na biblioteca!');loadFiles();
+  }catch(e){
+    $('#artOut').textContent='Erro: '+(e&&e.message||e);toast('Falha ao gerar arte.');
+  }
+  $('#btnArt').disabled=false;
+};
+function addUrlToSched(u){
+  const t=$('#agUrls');t.value=t.value?t.value+'\n'+u:u;
+  document.querySelector('[data-s="agendar"]').click();
+  toast('URL adicionada ao agendamento.');
+}
+$('#btnCap').onclick=async()=>{
+  const body={tema:$('#capTema').value,bullets:$('#capBullets').value.split('\n'),tom:$('#capTom').value,pergunta:$('#capPergunta').value};
+  const r=await api('caption',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  r.error?toast('Erro: '+JSON.stringify(r)):($('#capOut').value=r.caption,toast('Legenda gerada!'));
+};
+$('#btnCapUse').onclick=()=>{
+  if(!$('#capOut').value)return;
+  $('#agCaption').value=$('#capOut').value;
+  document.querySelector('[data-s="agendar"]').click();
+  toast('Legenda aplicada ao agendamento.');
+};
+loadFiles();
 loadSummary();loadMedia();loadQueue();loadSched();
 </script>
 </body>

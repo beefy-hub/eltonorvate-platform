@@ -85,6 +85,38 @@ async function waSend(text) {
   return { ok: r.ok ? 1 : 0, status: r.status, result: jr };
 }
 
+
+function bytesFromB64(b64) {
+  const bin = atob(b64);
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+}
+
+async function filesIndex(V) {
+  try { return JSON.parse(await V.get("f:index") || "{}"); } catch (e) { return {}; }
+}
+
+function slugTags(tema) {
+  const stop = ["de", "da", "do", "das", "dos", "e", "em", "no", "na", "nos", "nas", "a", "o", "as", "os", "um", "uma", "para", "com", "que", "se", "ao", "aos"];
+  return String(tema).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((w) => w.length > 3 && stop.indexOf(w) < 0).slice(0, 4).map((w) => "#" + w[0].toUpperCase() + w.slice(1));
+}
+
+function buildCaption(b) {
+  const tema = String(b.tema || "").trim();
+  const bullets = (Array.isArray(b.bullets) ? b.bullets : String(b.bullets || "").split("\n")).map((x) => String(x).trim()).filter(Boolean).slice(0, 5);
+  const tom = String(b.tom || "critico");
+  const pergunta = String(b.pergunta || "").trim();
+  let gancho;
+  if (tom === "dados") gancho = "Numero nao tem lado. Tem consequencia. E esse aqui muda a conta de qualquer gestor:";
+  else if (tom === "motivacional") gancho = "O Brasil nao precisa de mais promessa. Precisa de gestao. Veja o que isso significa na pratica:";
+  else gancho = "Enquanto o debate politico gira em fofoca, quem empreende e quem paga conta sabe: o que importa e isso aqui:";
+  const body = bullets.map((x) => "- " + x).join("\n");
+  const tags = ["#EltonOrvate", "#MenosEstadoMaisEmpreendedor", "#PoliticaComNegocios"].concat(slugTags(tema)).concat(["#DireitaConservadora"]).join(" ");
+  let cap = gancho + "\n\n" + (body ? body + "\n\n" : "");
+  if (pergunta) cap += pergunta + "\n\n";
+  cap += "Sou Elton Orvate: contador, DEV e empreendedor. Analiso politica com a mesma regua dos negocios: resultado.\n\nMe segue para acompanhar as proximas analises.\n\n" + tags;
+  return cap;
+}
+
 async function runDue(V, dryRun) {
   const l = await V.list({ prefix: "s:" });
   const now = Date.now();
@@ -227,6 +259,40 @@ async function handleRequest(request) {
           "\n\nResponda:\nAPROVAR " + code + " - publica agora\nREJEITAR " + code + " - descarta";
         const r = await waSend(msg);
         return Response.json(r);
+      }
+
+      if (url.pathname === "/panel/api/files" && request.method === "GET") {
+        return Response.json({ data: await filesIndex(V) });
+      }
+
+      if (url.pathname === "/panel/api/files" && request.method === "POST") {
+        const b = await request.json().catch(() => ({}));
+        const name = String(b.name || "").toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 90);
+        const ct = String(b.ct || "");
+        if (!name || !/^image\/(png|jpe?g|webp)$/.test(ct)) return Response.json({ error: "envie imagem png/jpg/webp com nome valido" }, { status: 400 });
+        let bytes;
+        try { bytes = bytesFromB64(String(b.data || "")); } catch (e) { return Response.json({ error: "base64 invalido" }, { status: 400 }); }
+        if (!bytes.length || bytes.length > 12 * 1024 * 1024) return Response.json({ error: "arquivo vazio ou maior que 12MB" }, { status: 400 });
+        await V.put("f:" + name, bytes);
+        const idx = await filesIndex(V);
+        idx[name] = { ct: ct, size: bytes.length, ts: Date.now() };
+        await V.put("f:index", JSON.stringify(idx));
+        return Response.json({ ok: 1, name: name, url: (typeof BASE_URL !== "undefined" ? BASE_URL : url.origin) + "/file/" + name });
+      }
+
+      if (url.pathname === "/panel/api/files/delete" && request.method === "POST") {
+        const b = await request.json().catch(() => ({}));
+        const name = String(b.name || "").toLowerCase();
+        if (!name || name.indexOf("/") >= 0) return Response.json({ error: "nome invalido" }, { status: 400 });
+        await V.delete("f:" + name);
+        const idx = await filesIndex(V);
+        delete idx[name];
+        await V.put("f:index", JSON.stringify(idx));
+        return Response.json({ ok: 1 });
+      }
+      if (url.pathname === "/panel/api/caption" && request.method === "POST") {
+        const b = await request.json().catch(() => ({}));
+        return Response.json({ ok: 1, caption: buildCaption(b) });
       }
 
       if (url.pathname === "/panel/api/queue/action" && request.method === "POST") {
@@ -433,6 +499,16 @@ async function handleRequest(request) {
       await V.put(id, JSON.stringify(item));
       await waSend("Aprovado (" + id + "). Sem artes anexadas - aguardando publicacao pelo painel.");
       return Response.json({ ok: 1, id, status: "aprovado" });
+    }
+
+    if (url.pathname.indexOf("/file/") === 0 && request.method === "GET") {
+      const name = url.pathname.slice(6).toLowerCase();
+      if (!/^[a-z0-9][a-z0-9._-]*$/.test(name)) return new Response("invalid", { status: 400 });
+      const buf = await V.get("f:" + name, { type: "arrayBuffer" });
+      if (!buf) return new Response("not found", { status: 404 });
+      const idx = await filesIndex(V);
+      const meta = idx[name];
+      return new Response(buf, { headers: { "Content-Type": (meta && meta.ct) || "application/octet-stream", "Cache-Control": "public, max-age=31536000, immutable" } });
     }
 
     const sv = await V.get("user");

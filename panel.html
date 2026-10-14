@@ -349,15 +349,116 @@ $('#btnUp').onclick=async()=>{
   if(r.error){$('#upOut').textContent='Erro: '+JSON.stringify(r);toast('Falha no envio.');return}
   $('#upOut').textContent='Enviado: '+r.url;$('#fileIn').value='';toast('Arquivo enviado!');loadFiles();
 };
+const EO_ASSETS='https://cdn.jsdelivr.net/gh/beefy-hub/eltonorvate-platform@main/assets';
+let EO_FONTS=null;
+async function eoFonts(){
+  if(EO_FONTS)return EO_FONTS;
+  for(const d of [['EO-400','playfair-400.ttf'],['EO-700','playfair-700.ttf'],['EO-IT','playfair-italic.ttf']]){
+    const f=new FontFace(d[0],'url('+EO_ASSETS+'/'+d[1]+')');
+    await f.load();document.fonts.add(f);
+  }
+  EO_FONTS=1;return 1;
+}
+function eoWrap(ctx,text,maxW,maxLines){
+  const words=String(text).split(/\s+/).filter(Boolean);const lines=[];let cur='';
+  for(const w of words){
+    const t=cur?cur+' '+w:w;
+    if(ctx.measureText(t).width>maxW&&cur){lines.push(cur);cur=w}else cur=t;
+  }
+  if(cur)lines.push(cur);
+  return lines.slice(0,maxLines||6);
+}
+function eoLoadImg(src){
+  return new Promise((res,rej)=>{
+    const im=new Image();
+    if(/^https?:\/\//.test(src)&&src.indexOf(location.host)<0)im.crossOrigin='anonymous';
+    im.onload=()=>res(im);
+    im.onerror=()=>rej(new Error('imagem indisponivel (URL invalida ou sem permissao CORS): '+src));
+    im.src=src;
+  });
+}
+async function eoGenerate(){
+  await eoFonts();
+  const titulo=$('#artTitulo').value.trim()||'Analise do dia';
+  const linhas=$('#artLinhas').value.split('\n').map(x=>x.trim()).filter(Boolean).slice(0,5);
+  const rodape=$('#artRodape').value.trim();
+  const numero=$('#artNumero').value.trim();
+  const foto=$('#artFoto').value.trim();
+  const W=1080,H=1350,GOLD='#d4af6a',CREAM='#f5f0e8',MUTE='#9a948a',BG='#0a0b0d';
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+  const hasFoto=!!foto;
+  if(hasFoto){
+    const src=/^https?:\/\//.test(foto)?foto:location.origin+'/file/'+foto.replace(/^\/file\//,'');
+    const im=await eoLoadImg(src);
+    const s=Math.max(W/im.width,H/im.height);
+    ctx.drawImage(im,(W-im.width*s)/2,(H-im.height*s)/2,im.width*s,im.height*s);
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'rgba(0,0,0,0.30)');g.addColorStop(0.45,'rgba(0,0,0,0.72)');g.addColorStop(1,'rgba(0,0,0,0.92)');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  }
+  ctx.strokeStyle=GOLD;ctx.lineWidth=2;ctx.strokeRect(36,36,W-72,H-72);
+  ctx.globalAlpha=0.35;ctx.lineWidth=1;ctx.strokeRect(50,50,W-100,H-100);ctx.globalAlpha=1;
+  const kickY=hasFoto?620:158;
+  if('letterSpacing' in ctx)ctx.letterSpacing='6px';
+  ctx.fillStyle=GOLD;ctx.font='700 30px "EO-700"';
+  ctx.fillText('ELTON ORVATE',90,kickY);
+  if('letterSpacing' in ctx)ctx.letterSpacing='4px';
+  ctx.font='22px "EO-400"';ctx.fillStyle=MUTE;
+  ctx.fillText('ANALISE DO DIA',90,kickY+38);
+  if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+  ctx.fillStyle=CREAM;ctx.font='700 62px "EO-700"';
+  let y=kickY+128;
+  for(const ln of eoWrap(ctx,titulo,900,3)){ctx.fillText(ln,90,y);y+=78}
+  y+=26;
+  let bc=0;
+  for(const blt of linhas){
+    if(bc>=4&&hasFoto)break;
+    ctx.font='38px "EO-400"';
+    const ls=eoWrap(ctx,blt,880,3);
+    let first=true;
+    for(const ln of ls){
+      if(first){ctx.fillStyle=GOLD;ctx.fillText('\u2014',90,y)}
+      ctx.fillStyle=CREAM;ctx.fillText(ln,126,y);
+      y+=56;first=false;
+    }
+    y+=14;bc++;
+    if(y>H-320)break;
+  }
+  if(rodape){
+    ctx.fillStyle=GOLD;ctx.font='italic 36px "EO-IT"';
+    const rl=eoWrap(ctx,rodape,900,2);
+    let ry=H-150-(rl.length-1)*48;
+    for(const ln of rl){ctx.fillText(ln,90,ry);ry+=48}
+  }
+  const selo=await eoLoadImg(EO_ASSETS+'/selo-eo.png');
+  ctx.drawImage(selo,W-268,H-296,172,172);
+  if(numero){
+    if('letterSpacing' in ctx)ctx.letterSpacing='3px';
+    ctx.fillStyle=MUTE;ctx.font='26px "EO-400"';
+    ctx.fillText(numero,90,H-96);
+    if('letterSpacing' in ctx)ctx.letterSpacing='0px';
+  }
+  const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+  if(!blob)throw new Error('falha ao exportar PNG');
+  const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(blob)});
+  const name='art-'+Date.now()+'.png';
+  const r=await api('files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,ct:'image/png',data:b64})});
+  if(r.error)throw new Error(JSON.stringify(r));
+  return r.url;
+}
 $('#btnArt').onclick=async()=>{
-  const body={titulo:$('#artTitulo').value,linhas:$('#artLinhas').value.split('\n'),rodape:$('#artRodape').value,foto:$('#artFoto').value,numero:$('#artNumero').value};
-  $('#btnArt').disabled=true;$('#artOut').textContent='Gerando arte (primeira vez pode levar alguns segundos)…';
-  const r=await api('art',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  $('#btnArt').disabled=true;$('#artOut').textContent='Renderizando a arte aqui no navegador e salvando na biblioteca…';
+  try{
+    const url=await eoGenerate();
+    $('#artOut').innerHTML='Arte pronta: <b>'+url+'</b>';
+    $('#artPreview').innerHTML='<img src="'+url+'" style="width:100%;max-width:420px;border-radius:10px;border:1px solid var(--line,#2a2c31)"><div class="row" style="margin-top:8px"><button class="btn ghost" onclick="navigator.clipboard.writeText(\''+url+'\');toast(\'URL copiada.\')">Copiar URL</button><button class="btn" onclick="addUrlToSched(\''+url+'\')">Usar no agendamento</button></div>';
+    toast('Arte gerada e salva na biblioteca!');loadFiles();
+  }catch(e){
+    $('#artOut').textContent='Erro: '+(e&&e.message||e);toast('Falha ao gerar arte.');
+  }
   $('#btnArt').disabled=false;
-  if(r.error){$('#artOut').textContent='Erro: '+JSON.stringify(r);toast('Falha ao gerar arte.');return}
-  $('#artOut').innerHTML='Arte pronta: <b>'+r.url+'</b>';
-  $('#artPreview').innerHTML='<img src="'+r.url+'" style="width:100%;max-width:420px;border-radius:10px;border:1px solid var(--line,#2a2c31)"><div class="row" style="margin-top:8px"><button class="btn ghost" onclick="navigator.clipboard.writeText(\''+r.url+'\');toast(\'URL copiada.\')">Copiar URL</button><button class="btn" onclick="addUrlToSched(\''+r.url+'\')">Usar no agendamento</button></div>';
-  toast('Arte gerada!');loadFiles();
 };
 function addUrlToSched(u){
   const t=$('#agUrls');t.value=t.value?t.value+'\n'+u:u;
